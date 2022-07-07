@@ -2,6 +2,7 @@ const res = require('express/lib/response')
 const mongoose = require('mongoose')
 const mongoDB = require('../db/dbMongo')
 const config = require('../src/config')
+const bcrypt = require('bcrypt-nodejs')
 
 const usuarioSchema = new mongoose.Schema({
     //usuario: {
@@ -10,6 +11,10 @@ const usuarioSchema = new mongoose.Schema({
         password: {type: String}//, required: true, max: 100} 
     //}
 })
+
+usuarioSchema.methods.encryptPass = password => {
+    return bcrypt.hashSync(password, bcrypt.genSaltSync(10))
+}
 
 const model = mongoose.model('usuarios', usuarioSchema)
 

@@ -19,6 +19,9 @@ const apiRandom = require('./routes/apiRandom')
 /* database */
 const usuarios = []
 
+/* Chequeo de password */
+const comparePass = require('./utils/bcryptPassword')
+
 /* passport */
 passport.use('registrarse', new LocalStrategy({
     passReqToCallback: true
@@ -38,13 +41,17 @@ passport.use('registrarse', new LocalStrategy({
 passport.use('login', new LocalStrategy.Strategy({
     usernameField: "usuario",
     passwordField: "password",
-    passReqToCallback: true
+    passReqToCallback: true,
 }, async (req, usuario, password, done) => {
-    const user = await model.findOne({usuario})
+    const user = await model.findOne({ usuario })
+    console.log(user)
     if(!user){
-        return done(null, false)
+        return done(null, false, {message: 'El usuario no existe'})
     }
-    done(null, user)
+    if(!comparePass(password, user.password)){
+        return done(null, false, {message: 'Las contraseñas no coinciden'})
+    }
+    done(null, user, {message: 'Usuario ok'})
 }))
 
 passport.serializeUser(function (user, done){
@@ -125,9 +132,11 @@ io.on('connection', function(socket){
 
 /* Login */ 
 app.post('/login', passport.authenticate("login", {successRedirect: "/home", failureRedirect: "/registrarse", passReqToCallback: true}))
+
 app.get('/registrarse', (req, res)=>{
     res.redirect('registrarse.html')
 })
+
 app.post('/registrarse', async(req, res) => {
    await newUser.guardar(req.body)
     res.redirect('/')
