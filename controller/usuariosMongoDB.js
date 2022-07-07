@@ -16,6 +16,10 @@ usuarioSchema.methods.encryptPass = password => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(10))
 }
 
+usuarioSchema.methods.validPassword = function(password) {
+    return bcrypt.compareSync(password, this.password);
+}
+
 const model = mongoose.model('usuarios', usuarioSchema)
 
 const db = async() => {

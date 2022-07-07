@@ -21,6 +21,7 @@ const usuarios = []
 
 /* Chequeo de password */
 const comparePass = require('./utils/bcryptPassword')
+const res = require('express/lib/response')
 
 /* passport */
 passport.use('registrarse', new LocalStrategy({
@@ -38,7 +39,7 @@ passport.use('registrarse', new LocalStrategy({
     return done(null, user)
 }))
 
-passport.use('login', new LocalStrategy.Strategy({
+passport.use('login', new LocalStrategy/*.Strategy*/({
     usernameField: "usuario",
     passwordField: "password",
     passReqToCallback: true,
@@ -48,10 +49,15 @@ passport.use('login', new LocalStrategy.Strategy({
     if(!user){
         return done(null, false, {message: 'El usuario no existe'})
     }
-    if(!comparePass(password, user.password)){
+    console.log(password)
+    /*if(!comparePass(password, user.password)){
         return done(null, false, {message: 'Las contraseñas no coinciden'})
-    }
-    done(null, user, {message: 'Usuario ok'})
+    }*/
+    if (password === user.password) {
+        done(null, user, {message: 'Usuario ok'})
+    } /*else {
+        res.json('Usuario no encontrado')
+    } */
 }))
 
 passport.serializeUser(function (user, done){
@@ -101,13 +107,13 @@ function isAuth(req, res, next) {
     }
 }
 
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
     let productos = [
         {nombre: 'Escuadra', precio: 20, foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Squadra_45.jpg/640px-Squadra_45.jpg"}, 
         {nombre: 'Regla', precio: 10, foto: "https://image.shutterstock.com/image-vector/school-measuring-plastic-ruler-20-260nw-615662024.jpg"}, 
         {nombre: 'Compás', precio: 20, foto: "https://thumbs.dreamstime.com/b/comp%C3%A1s-de-dibujo-aislado-rojo-132996590.jpg"}
     ]    
-})
+})*/
 
 app.post('/productos', (req, res) => {
     productos.push(req.body)
@@ -131,7 +137,7 @@ io.on('connection', function(socket){
 
 
 /* Login */ 
-app.post('/login', passport.authenticate("login", {successRedirect: "/home", failureRedirect: "/registrarse", passReqToCallback: true}))
+app.post('/login', passport.authenticate("login", {successRedirect: "/home", failureRedirect: "/error", passReqToCallback: true}))
 
 app.get('/registrarse', (req, res)=>{
     res.redirect('registrarse.html')
@@ -143,6 +149,11 @@ app.post('/registrarse', async(req, res) => {
 })
 app.get('/home', (req,res)=>{
     const { user: usuario } = req.session.passport
+    let productos = [
+        {nombre: 'Escuadra', precio: 20, foto: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Squadra_45.jpg/640px-Squadra_45.jpg"}, 
+        {nombre: 'Regla', precio: 10, foto: "https://image.shutterstock.com/image-vector/school-measuring-plastic-ruler-20-260nw-615662024.jpg"}, 
+        {nombre: 'Compás', precio: 20, foto: "https://thumbs.dreamstime.com/b/comp%C3%A1s-de-dibujo-aislado-rojo-132996590.jpg"}
+    ]
     res.render('productos', {usuario, productos})
 } )
 app.post('/logout', (req, res) => {
